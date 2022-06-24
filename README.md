@@ -38,7 +38,7 @@ epochs = 100
 batch_size = 256
 
 X = np.random.rand(512, 128)
-X_embedded = TSNE_NN(device, n_epochs=epochs, verbose = verbose, batch_size=batch_size).fit(X)
+X_embedded = TSNE_NN(device, n_epochs=epochs, batch_size=batch_size).fit(X)
 ```
 
 ### LARGEVIS_NN
@@ -51,7 +51,7 @@ epochs = 100
 batch_size = 256
 
 X = np.random.rand(512, 128)
-X_embedded = LARGEVIS_NN(device, n_epochs=epochs, verbose = verbose, batch_size=batch_size).fit(X)
+X_embedded = LARGEVIS_NN(device, n_epochs=epochs, batch_size=batch_size).fit(X)
 ```
 
 ### UMAP_NN
@@ -64,6 +64,6 @@ epochs = 100
 batch_size = 256
 
 X = np.random.rand(512, 128)
-X_embedded = UMAP_NN(device, n_epochs=epochs, verbose = verbose, batch_size=batch_size).fit(X)
+X_embedded = UMAP_NN(device, n_epochs=epochs, batch_size=batch_size).fit(X)
 ```
 </details>
