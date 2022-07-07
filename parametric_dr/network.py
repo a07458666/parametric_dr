@@ -20,19 +20,38 @@ class FCEncoder(nn.Module):
 		self.dim = dim
 		self.num_layers = num_layers
 		self.act = partial(get_activation, act=act)
+        
+		#layers = [
+		#	(nn.Linear(dim, hidden_dim*2)),
+		#	self.act(),
+		#	(nn.Linear(hidden_dim*2, hidden_dim)),
+		#	self.act(),
+		#]
+		#layers += [
+		#	(nn.Linear(hidden_dim, hidden_dim)),
+		#	self.act(),
+		#] * num_layers
+		#layers += [
+		#	(nn.Linear(hidden_dim, low_dim)),
+		#]
+        
+		# new network (1024 -> 512 -> 256 -> 128 -> 2)
 		layers = [
-			(nn.Linear(dim, hidden_dim*2)),
+			(nn.Linear(dim, 1024)),
+			#(nn.BatchNorm1d(1024)),
 			self.act(),
-			(nn.Linear(hidden_dim*2, hidden_dim)),
+			(nn.Linear(1024, 512)),
+			#(nn.BatchNorm1d(512)),
 			self.act(),
+			(nn.Linear(512, 256)),
+			#(nn.BatchNorm1d(256)),
+			self.act(),
+			(nn.Linear(256, 128)),
+			#(nn.BatchNorm1d(128)),
+			self.act(),
+			(nn.Linear(128, low_dim))
 		]
-		layers += [
-			(nn.Linear(hidden_dim, hidden_dim)),
-			self.act(),
-		] * num_layers
-		layers += [
-			(nn.Linear(hidden_dim, low_dim)),
-		]
+        
 		self.net = nn.Sequential(*layers)
 		
 	def forward(self, X):
