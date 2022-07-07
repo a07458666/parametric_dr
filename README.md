@@ -11,7 +11,7 @@ Arxiv: https://arxiv.org/abs/2009.14373
 * opentsne (https://opentsne.readthedocs.io/en/latest/api/index.html)
 * umap (https://github.com/lmcinnes/umap)
 
-## <div align="center">Quick Start Examples</div>
+## <div align="left">Quick Start Examples</div>
 
 <details open>
 <summary>Install</summary>
@@ -39,31 +39,5 @@ batch_size = 256
 
 X = np.random.rand(512, 128)
 X_embedded = TSNE_NN(device, n_epochs=epochs, batch_size=batch_size).fit(X)
-```
-
-### LARGEVIS_NN
-```python
-import numpy as np
-import torch
-from parametric_dr.largevis_nn import LARGEVIS_NN
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-epochs = 100
-batch_size = 256
-
-X = np.random.rand(512, 128)
-X_embedded = LARGEVIS_NN(device, n_epochs=epochs, batch_size=batch_size).fit(X)
-```
-
-### UMAP_NN
-```python
-import numpy as np
-import torch
-from parametric_dr.umap_nn import UMAP_NN
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-epochs = 100
-batch_size = 256
-
-X = np.random.rand(512, 128)
-X_embedded = UMAP_NN(device, n_epochs=epochs, batch_size=batch_size).fit(X)
 ```
 </details>
