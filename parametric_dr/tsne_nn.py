@@ -49,7 +49,7 @@ class TSNE_NN():
 
 		encoder = encoder.to(device)
 		init_lr = 1e-3
-		optimizer = optim.RMSprop(encoder.parameters(), lr=init_lr)
+		optimizer = optim.Adam(encoder.parameters(), lr=init_lr)
 		lr_sched = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=self.n_epochs * math.ceil(len(X)/batch_size), eta_min=1e-7)
 		
 		def neg_squared_euc_dists(X):
@@ -66,7 +66,8 @@ class TSNE_NN():
 			if x.requires_grad:
 				def hook(grad):
 					self.max_grads.append(float(grad.abs().max().cpu().numpy()))
-					return grad
+					clipped_grad = grad.clamp(min=-D_GRAD_CLIP, max=D_GRAD_CLIP)
+					return clipped_grad
 				x.register_hook(hook)
 			return P * torch.log(x)
 		
@@ -96,7 +97,7 @@ class TSNE_NN():
 				loss = KLD(p, q).sum()
 				loss.backward()
 				self.loss_total.append(loss.item())
-				# torch.nn.utils.clip_grad_value_(encoder.parameters(), 4)
+				torch.nn.utils.clip_grad_value_(encoder.parameters(), 4)
 				optimizer.step()
 				elapsed = timeit.default_timer() - start_time
 				update_time.append(elapsed)
@@ -105,4 +106,10 @@ class TSNE_NN():
 			if (self.verbose):
 				pbar.set_description("Processing epoch %03d/%03d loss : %.5f time : %.5fs" % (epoch + 1, self.n_epochs, np.mean(self.loss_total), np.mean(update_time)))
 				# print('{:03d}/{:03d}'.format(epoch, self.n_epochs), '{:.5f}'.format(np.mean(self.loss_total)), '{:.5f}s'.format(np.mean(update_time)))
-		return encoder(self.X).cpu().detach().numpy()
+
+		with torch.no_grad():
+			result = encoder(self.X).detach().cpu().numpy()
+        	# Normalize coordinates to [0, 1]    
+			result_min, result_max = result.min(), result.max()
+			result_norm = (result - result_min) / (result_max - result_min)
+			return result_norm
