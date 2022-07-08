@@ -12,6 +12,8 @@ def get_activation(act, inplace=True):
 		return nn.LeakyReLU(0.01, inplace=inplace)
 	elif act == 'relu':
 		return nn.ReLU(inplace=inplace)
+	elif act == 'sigmoid':
+		return nn.Sigmoid()
 	raise Exception('unsupported activation function')
 
 class FCEncoder(nn.Module):
@@ -38,16 +40,16 @@ class FCEncoder(nn.Module):
 		# new network (1024 -> 512 -> 256 -> 128 -> 2)
 		layers = [
 			(nn.Linear(dim, 1024)),
-			#(nn.BatchNorm1d(1024)),
+			# (nn.BatchNorm1d(1024)),
 			self.act(),
 			(nn.Linear(1024, 512)),
-			#(nn.BatchNorm1d(512)),
+			# (nn.BatchNorm1d(512)),
 			self.act(),
 			(nn.Linear(512, 256)),
-			#(nn.BatchNorm1d(256)),
+			# (nn.BatchNorm1d(256)),
 			self.act(),
 			(nn.Linear(256, 128)),
-			#(nn.BatchNorm1d(128)),
+			# (nn.BatchNorm1d(128)),
 			self.act(),
 			(nn.Linear(128, low_dim))
 		]
