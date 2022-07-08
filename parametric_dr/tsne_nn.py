@@ -24,9 +24,8 @@ class TSNE_NN():
 		self.batch_size = batch_size
 		self.perplexity = 15
 		self.test_data = None
-		self.max_clipped_grads = []
 		self.max_grads = []
-		self.loss_total = []
+		self.epoch_losses = []
 		self.verbose = verbose
 		self.num_layers = num_layers
 		self.hidden_dim = hidden_dim
@@ -49,6 +48,10 @@ class TSNE_NN():
 		self.encoder = self.encoder.to(self.device)
 		init_lr = 1e-3
 		optimizer = optim.Adam(self.encoder.parameters(), lr=init_lr)
+		# optimizer = optim.AdamW(self.encoder.parameters(), lr=init_lr)
+		# init_lr = 1e-4
+		# optimizer = optim.SGD(self.encoder.parameters(), lr=init_lr, momentum=0.9, weight_decay=5e-4) 
+
 		lr_sched = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=self.n_epochs * math.ceil(len(X)/batch_size), eta_min=1e-7)
 		
 		def neg_squared_euc_dists(X):
@@ -78,7 +81,7 @@ class TSNE_NN():
 
 			idxs = torch.randperm(len(X))
 			
-			self.loss_total = []
+			loss_total = []
 			update_time = []
 			for i in range(0, len(X), batch_size):
 				start_time = timeit.default_timer()
@@ -93,15 +96,17 @@ class TSNE_NN():
 				q = w / torch.sum(w)
 				loss = KLD(p, q).sum()
 				loss.backward()
-				self.loss_total.append(loss.item())
+				loss_total.append(loss.item())
 				torch.nn.utils.clip_grad_value_(self.encoder.parameters(), 4)
 				optimizer.step()
 				elapsed = timeit.default_timer() - start_time
 				update_time.append(elapsed)
 			
 				lr_sched.step()
+			
+			self.epoch_losses.append(np.mean(loss_total))
 			if (self.verbose):
-				pbar.set_description("Processing epoch %03d/%03d loss : %.5f time : %.5fs" % (epoch + 1, self.n_epochs, np.mean(self.loss_total), np.mean(update_time)))
+				pbar.set_description("Processing epoch %03d/%03d loss : %.5f time : %.5fs" % (epoch + 1, self.n_epochs, np.mean(loss_total), np.mean(update_time)))
 				# print('{:03d}/{:03d}'.format(epoch, self.n_epochs), '{:.5f}'.format(np.mean(self.loss_total)), '{:.5f}s'.format(np.mean(update_time)))
 	
 		with torch.no_grad():
