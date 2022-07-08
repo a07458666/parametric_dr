@@ -33,9 +33,8 @@ class TSNE_NN():
 		self.n_components = n_components
 	
 	def fit(self, data):
-		encoder = FCEncoder(data.shape[1], num_layers=self.num_layers, hidden_dim=self.hidden_dim, low_dim=self.n_components)
+		self.encoder = FCEncoder(data.shape[1], num_layers=self.num_layers, hidden_dim=self.hidden_dim, low_dim=self.n_components)
 		batch_size = self.batch_size
-		device = self.device
 		print('perplexity:', self.perplexity)
 		
 		print('calc P')
@@ -44,16 +43,16 @@ class TSNE_NN():
 			
 		print('Trying to put X into GPU')
 		X = torch.from_numpy(data).float()
-		X = X.to(device)
+		X = X.to(self.device)
 		self.X = X
 
-		encoder = encoder.to(device)
+		self.encoder = self.encoder.to(self.device)
 		init_lr = 1e-3
-		optimizer = optim.Adam(encoder.parameters(), lr=init_lr)
+		optimizer = optim.Adam(self.encoder.parameters(), lr=init_lr)
 		lr_sched = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=self.n_epochs * math.ceil(len(X)/batch_size), eta_min=1e-7)
 		
 		def neg_squared_euc_dists(X):
-			D = torch.cdist(X, X, p=2)
+			D = torch.cdist(X, X, p=2).pow(2)
 			return -D
 
 		def w_tsne(Y):
@@ -87,17 +86,15 @@ class TSNE_NN():
 				_p = torch.Tensor(P_csc[idx][:, idx].toarray()).float()
 				if iteration < 250:
 					_p *= 4
-				p = (_p+EPS).to(device)
+				p = (_p+EPS).to(self.device)
 				optimizer.zero_grad()
-				y = encoder(X[idx])
-				if (torch.sum(torch.isnan(y)) > 0):
-					return
+				y = self.encoder(X[idx])
 				w = w_tsne(y)
 				q = w / torch.sum(w)
 				loss = KLD(p, q).sum()
 				loss.backward()
 				self.loss_total.append(loss.item())
-				torch.nn.utils.clip_grad_value_(encoder.parameters(), 4)
+				torch.nn.utils.clip_grad_value_(self.encoder.parameters(), 4)
 				optimizer.step()
 				elapsed = timeit.default_timer() - start_time
 				update_time.append(elapsed)
@@ -106,10 +103,20 @@ class TSNE_NN():
 			if (self.verbose):
 				pbar.set_description("Processing epoch %03d/%03d loss : %.5f time : %.5fs" % (epoch + 1, self.n_epochs, np.mean(self.loss_total), np.mean(update_time)))
 				# print('{:03d}/{:03d}'.format(epoch, self.n_epochs), '{:.5f}'.format(np.mean(self.loss_total)), '{:.5f}s'.format(np.mean(update_time)))
-
+	
 		with torch.no_grad():
-			result = encoder(self.X).detach().cpu().numpy()
+			result = self.encoder(self.X).detach().cpu().numpy()
         	# Normalize coordinates to [0, 1]    
+			result_min, result_max = result.min(), result.max()
+			result_norm = (result - result_min) / (result_max - result_min)
+			return result_norm
+
+	def fit_val(self, data):
+		with torch.no_grad():
+			self.X = torch.from_numpy(data).float()
+			self.X = self.X.to(self.device)
+			result = self.encoder(self.X).detach().cpu().numpy()
+			# Normalize coordinates to [0, 1]    
 			result_min, result_max = result.min(), result.max()
 			result_norm = (result - result_min) / (result_max - result_min)
 			return result_norm
