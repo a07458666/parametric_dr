@@ -19,6 +19,10 @@ is highly efficient. For evaluation, we compared our method to
 several baselines on a variety of datasets. Experiment results demonstrate
 the feasibility of our method.*
 
+## Paper
+Download Paper from  <a href="https://github.com/a07458666/parametric_dr/blob/main/document/Parametric_t_SNE_main.pdf">Parametric Dimension Reduction by Preserving Local Structure</a>.
+
+
 ## Prerequisites
 * pytorch (https://pytorch.org/)
 * opentsne (https://opentsne.readthedocs.io/en/latest/api/index.html)
