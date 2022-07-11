@@ -18,7 +18,7 @@ EPS = 1e-12
 D_GRAD_CLIP = 1e14
 
 class TSNE_NN():
-	def __init__(self, device, n_epochs, num_layers=3 ,hidden_dim=256, n_components=2, verbose=True, batch_size=256):
+	def __init__(self, device, n_epochs ,hidden_dim=256, n_components=2, verbose=True, batch_size=256):
 		self.device = device
 		self.n_epochs = n_epochs
 		self.batch_size = batch_size
@@ -27,12 +27,11 @@ class TSNE_NN():
 		self.max_grads = []
 		self.epoch_losses = []
 		self.verbose = verbose
-		self.num_layers = num_layers
 		self.hidden_dim = hidden_dim
 		self.n_components = n_components
 	
 	def fit(self, data):
-		self.encoder = FCEncoder(data.shape[1], num_layers=self.num_layers, hidden_dim=self.hidden_dim, low_dim=self.n_components)
+		self.encoder = FCEncoder(data.shape[1], low_dim=self.n_components)
 		batch_size = self.batch_size
 		print('perplexity:', self.perplexity)
 		
@@ -49,7 +48,7 @@ class TSNE_NN():
 		init_lr = 1e-3
 		optimizer = optim.Adam(self.encoder.parameters(), lr=init_lr)
 		# optimizer = optim.AdamW(self.encoder.parameters(), lr=init_lr)
-		# init_lr = 1e-4
+		# init_lr = 1e-3
 		# optimizer = optim.SGD(self.encoder.parameters(), lr=init_lr, momentum=0.9, weight_decay=5e-4) 
 
 		lr_sched = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=self.n_epochs * math.ceil(len(X)/batch_size), eta_min=1e-7)

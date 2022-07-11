@@ -17,25 +17,10 @@ def get_activation(act, inplace=True):
 	raise Exception('unsupported activation function')
 
 class FCEncoder(nn.Module):
-	def __init__(self, dim, num_layers=3, hidden_dim=256, low_dim=2, act='lrelu'):
+	def __init__(self, dim, low_dim=2, act='sigmoid'):
 		super(FCEncoder, self).__init__()
 		self.dim = dim
-		self.num_layers = num_layers
 		self.act = partial(get_activation, act=act)
-        
-		#layers = [
-		#	(nn.Linear(dim, hidden_dim*2)),
-		#	self.act(),
-		#	(nn.Linear(hidden_dim*2, hidden_dim)),
-		#	self.act(),
-		#]
-		#layers += [
-		#	(nn.Linear(hidden_dim, hidden_dim)),
-		#	self.act(),
-		#] * num_layers
-		#layers += [
-		#	(nn.Linear(hidden_dim, low_dim)),
-		#]
         
 		# new network (1024 -> 512 -> 256 -> 128 -> 2)
 		layers = [
